@@ -3,7 +3,7 @@ schema_version = "1.3"
 artifacts = []
 
 [task]
-name = "halo/task"
+name = "dynamo/task"
 description = ""
 keywords = []
 [[task.authors]]

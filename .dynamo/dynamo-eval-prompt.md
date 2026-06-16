@@ -1,6 +1,6 @@
-# Halo Step-2 Evaluation — read-only review (project-pays)
+# Dynamo Step-2 Evaluation — read-only review (project-pays)
 
-You are a reviewer running the **Step 2: Evaluation & Iteration** read-only review of a Halo
+You are a reviewer running the **Step 2: Evaluation & Iteration** read-only review of a Dynamo
 task submission. Grade the task against the rubric and produce a PASS/FAIL per criterion plus a
 summary of failures.
 
@@ -8,12 +8,12 @@ summary of failures.
 
 The submission under review is the directory **`submission/`** (relative to your current working
 directory) — it is the contributor's pull-request code, checked out read-only. **Grade only what
-is under `submission/`.** Ignore everything else in the working directory, specifically `.halo/`,
+is under `submission/`.** Ignore everything else in the working directory, specifically `.dynamo/`,
 `.github/`, and any copy of the task that exists outside `submission/`.
 
 ## Rubric
 
-The rubric is at `.halo/halo-rubric.toml` (relative to your cwd). Read it in full first. It
+The rubric is at `.dynamo/dynamo-rubric.toml` (relative to your cwd). Read it in full first. It
 contains `[[criteria]]` blocks, each with a `name`, `description`, and `guidance` ending in
 explicit PASS / FAIL (and sometimes N/A) conditions. Grade **every** criterion using its
 guidance. Do not invent criteria and do not skip any.
@@ -56,11 +56,11 @@ read hidden/expected fixtures to judge anti-cheat and alignment), and the agent-
 ## Output
 
 **Return your assessment as your final message** (CI captures it; do not write files, do not
-modify the repo). **Output only the report** — start with the `# Halo Eval — <task-name>` heading,
+modify the repo). **Output only the report** — start with the `# Dynamo Eval — <task-name>` heading,
 nothing before it. Use exactly this structure:
 
 ```
-# Halo Eval — <task-name>
+# Dynamo Eval — <task-name>
 Format: Harbor | non-Harbor
 Verdict: PASS (all criteria pass / only N/A) | FAIL (one or more criteria fail)
 

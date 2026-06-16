@@ -1,7 +1,7 @@
-# Halo Task Submission
+# Dynamo Task Submission
 
 Implement a Terminal-Bench-style task in this repository (Harbor task format). When
-you open a pull request, an automated reviewer scores your task against the Halo
+you open a pull request, an automated reviewer scores your task against the Dynamo
 rubric and posts a **PASS / FAIL verdict** as a PR comment. **All criteria must
 pass** to be accepted — iterate until the verdict is ✅ PASS.
 
@@ -15,13 +15,13 @@ You don't have write access to this repo. You **fork it, implement your task, an
 open a pull request** (requires the [GitHub CLI](https://cli.github.com/), `gh`):
 
 ```bash
-gh repo fork alexhs-hop/halo-task-base --clone
-cd halo-task-base
+gh repo fork alexhs-hop/dynamo-task-base --clone
+cd dynamo-task-base
 git checkout -b submission
 #  ... implement the task (see below) ...
 git add -A && git commit -m "Task submission"
 git push -u origin submission
-gh pr create --repo alexhs-hop/halo-task-base --fill
+gh pr create --repo alexhs-hop/dynamo-task-base --fill
 ```
 
 To **iterate** after reading the verdict: edit, then `git commit` and `git push` —
@@ -44,7 +44,7 @@ Keep the `harbor-canary` comment in each file (anti-contamination), pin dependen
 versions, and reference every expected output file in `instruction.md`.
 
 > The exact criteria the reviewer uses are in
-> [`.halo/halo-rubric.toml`](.halo/halo-rubric.toml) — read it to see what "good" means.
+> [`.dynamo/dynamo-rubric.toml`](.dynamo/dynamo-rubric.toml) — read it to see what "good" means.
 
 When your task is complete, replace this README with a short description of your
 task (overview, approach, environment, how verification works).

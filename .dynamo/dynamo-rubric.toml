@@ -1,9 +1,9 @@
 # =============================================================================
-# halo-rubric.toml
+# dynamo-rubric.toml
 # =============================================================================
-# Rubric for STEP 2: Evaluation & Iteration of the Halo task flow.
+# Rubric for STEP 2: Evaluation & Iteration of the Dynamo task flow.
 #
-# A Halo semistructured submission is reviewed read-only (no execution) against
+# A Dynamo semistructured submission is reviewed read-only (no execution) against
 # this rubric. Every criterion is graded PASS or FAIL. Only tasks that pass all
 # applicable criteria continue to Harbor conversion (Step 3); failing tasks are
 # returned to the fellow for revision.
@@ -76,7 +76,7 @@
 name = "code_dependent"
 description = "Requires terminal interaction and code execution, not reasoning alone"
 guidance = """
-Halo targets agentic models, so the problem must require terminal interaction and code execution that goes beyond simple input/output or file manipulation. Any instruction that can be fulfilled through reasoning alone — recall, a single command, or a one-shot generation — is not a fit for the benchmark.
+Dynamo targets agentic models, so the problem must require terminal interaction and code execution that goes beyond simple input/output or file manipulation. Any instruction that can be fulfilled through reasoning alone — recall, a single command, or a one-shot generation — is not a fit for the benchmark.
 
 Apply the "Pen & Paper test": the task should NOT be solvable conceptually, without code, in an afternoon. The solution should require genuine multi-step interaction with the environment — exploration, tool use, debugging, computation, and iteration — where the agent must observe intermediate results and adapt. The solution script must not be something a beginner or inexperienced coder could trivially implement; if the code is "too simple," the task will not stump a strong model.
 
@@ -308,7 +308,7 @@ PASS if the estimate is non-zero and plausible given the described difficulty. F
 name = "open_internet"
 description = "Task is designed to run with open internet access"
 guidance = """
-Halo tasks are expected to run with open internet access. Confirm the task does not assume an offline environment in a way that conflicts with this, and that being open-internet does not itself open a cheating path (i.e., the answer must not be retrievable online — see anti_cheat and verifiable). If the submission documents an internet setting, it should be open.
+Dynamo tasks are expected to run with open internet access. Confirm the task does not assume an offline environment in a way that conflicts with this, and that being open-internet does not itself open a cheating path (i.e., the answer must not be retrievable online — see anti_cheat and verifiable). If the submission documents an internet setting, it should be open.
 
 PASS if the task is compatible with open-internet execution and open internet does not enable trivially looking up the answer. FAIL if the task requires an offline environment, or if open internet would let the agent retrieve the intended answer and bypass the work."""
 

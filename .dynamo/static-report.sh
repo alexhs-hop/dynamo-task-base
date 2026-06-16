@@ -12,7 +12,7 @@ SUB="${1:?usage: static-report.sh <submission-dir>}"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECKS="$DIR/checks"
 REPO="${REPO:-$GITHUB_REPOSITORY}"
-MARKER="<!-- halo-static -->"
+MARKER="<!-- dynamo-static -->"
 
 # script | human label
 ALL=(

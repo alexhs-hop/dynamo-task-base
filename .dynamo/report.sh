@@ -12,7 +12,7 @@ set -euo pipefail
 
 VERDICT_FILE="${1:?usage: report.sh <verdict-file>}"
 REPO="${REPO:-$GITHUB_REPOSITORY}"
-MARKER="<!-- halo-eval -->"
+MARKER="<!-- dynamo-eval -->"
 
 post_comment() {
   local body="$1" existing
@@ -34,7 +34,7 @@ set_label() { # add $1, remove $2
 # --- Did the eval produce a verdict? --------------------------------------
 if [ ! -s "$VERDICT_FILE" ] || ! grep -qE '^Verdict:' "$VERDICT_FILE"; then
   post_comment "$MARKER
-### Halo eval — could not complete
+### Dynamo eval — could not complete
 
 The automated review did not produce a verdict (usually a transient error or an
 API budget issue). Push a new commit to re-run."
@@ -42,17 +42,17 @@ API budget issue). Push a new commit to re-run."
   exit 1
 fi
 
-# Trim any model preamble: keep from the first "# Halo Eval" heading onward.
-VERDICT_BODY="$(awk 'f || /^# Halo Eval/ {f=1; print}' "$VERDICT_FILE")"
+# Trim any model preamble: keep from the first "# Dynamo Eval" heading onward.
+VERDICT_BODY="$(awk 'f || /^# Dynamo Eval/ {f=1; print}' "$VERDICT_FILE")"
 [ -n "$VERDICT_BODY" ] || VERDICT_BODY="$(cat "$VERDICT_FILE")"
 
 if grep -m1 -qE '^Verdict:[[:space:]]*PASS' "$VERDICT_FILE"; then
-  HEADER="### Halo eval — ✅ PASS"
-  set_label "accepted" "needs-revision" "0e8a16" "Halo eval passed all criteria"
+  HEADER="### Dynamo eval — ✅ PASS"
+  set_label "accepted" "needs-revision" "0e8a16" "Dynamo eval passed all criteria"
   RESULT=pass
 else
-  HEADER="### Halo eval — 🔧 needs revision"
-  set_label "needs-revision" "accepted" "d93f0b" "Halo eval found failing criteria"
+  HEADER="### Dynamo eval — 🔧 needs revision"
+  set_label "needs-revision" "accepted" "d93f0b" "Dynamo eval found failing criteria"
   RESULT=fail
 fi
 
@@ -62,7 +62,7 @@ $HEADER
 $VERDICT_BODY
 
 ---
-*Automated read-only review against \`.halo/halo-rubric.toml\`. Address the
+*Automated read-only review against \`.dynamo/dynamo-rubric.toml\`. Address the
 failing criteria above, then \`git commit\` and \`git push\` to re-run. All
 criteria must pass to be accepted.*"
 
