@@ -1,0 +1,341 @@
+# =============================================================================
+# halo-rubric.toml
+# =============================================================================
+# Rubric for STEP 2: Evaluation & Iteration of the Halo task flow.
+#
+# A Halo semistructured submission is reviewed read-only (no execution) against
+# this rubric. Every criterion is graded PASS or FAIL. Only tasks that pass all
+# applicable criteria continue to Harbor conversion (Step 3); failing tasks are
+# returned to the fellow for revision.
+#
+# Submissions may NOT yet be in Harbor format. Non-Harbor submissions will contain:
+#   - task.toml            — task metadata (Harbor-format fields)
+#   - instruction.md       — the prompt; must define all inputs and outputs
+#   - solution/solve.*     — solution script(s); .py, .sh, or any language
+#   - tests/test_outputs.py — verifiers; must correspond to instruction.md criteria
+#   - assets/              — inputs the agent receives (existing code and data)
+#
+# Some submissions MAY already be in Harbor format. A Harbor-format submission
+# carries the same logical pieces plus the Harbor runtime scaffolding:
+#   - instruction.md, task.toml          — same roles as above
+#   - environment/                       — container definition (Dockerfile) AND
+#                                          the agent's input files; there is no
+#                                          top-level assets/ dir. The inputs live
+#                                          under environment/ and may be named
+#                                          differently (e.g. environment/data/,
+#                                          environment/assets/) — whatever the
+#                                          Dockerfile COPYs into the agent image.
+#   - solution/                          — solve.sh is the Harbor entrypoint, but
+#                                          it may just invoke an auxiliary script
+#                                          (e.g. solve.sh runs solve.py). The real
+#                                          solution logic can live in those
+#                                          auxiliary files alongside solve.sh.
+#   - tests/test_outputs.py, tests/test.sh — verifiers and the test runner
+# Map Harbor files onto the criteria by role: grade the full solution (solve.sh
+# AND any auxiliary scripts it invokes) as the solution, `tests/*` as the
+# verifiers, and `instruction.md` + everything the agent can read (the input files
+# under environment/, files COPYed into the image, data-file headers) as
+# disclosure.
+#
+# THE GRADING CRITERIA ARE IDENTICAL FOR BOTH FORMATS. This rubric grades the
+# task's design — its difficulty, clarity, solvability, and verification — not
+# its packaging. Do not pass or fail a task on whether it is in Harbor format,
+# and do not add or drop criteria based on format. The Harbor-runtime concerns
+# that this rubric deliberately omits (Dockerfile/image hygiene, separate-verifier
+# plumbing, resource/timeout config) remain out of scope even when a Dockerfile is
+# present — they are validated during/after Harbor conversion, not here.
+#
+# HARBOR RUN OUTPUTS ARE OUT OF SCOPE. A task directory may contain one or more
+# `harbor-merged-<RUN_ID>/` directories (recorded agent rollouts plus verifier
+# results from pass@k runs), and the repository may also have top-level `jobs/`,
+# `oracle-logs/`, or `pass8-logs/` directories. These are RUN ARTIFACTS, not part
+# of the submission being graded. Do NOT inventory, read, or grade anything under
+# them, and never treat their contents (agent trajectories, rewards, pass/fail
+# scores) as evidence for or against any criterion. Grade only the task definition:
+# instruction.md, task.toml, solution/, tests/, and environment/ (the agent inputs).
+#
+# Because nothing is executed here, criteria that depend on the Harbor runtime are
+# deferred to later steps. Where the Terminal-Bench rubric assumes an oracle run,
+# this rubric instead grades from the submitted files, explanations, and the
+# consistency between them.
+#
+# THE TARGET SOLVER. Assess every dimension against a *competent domain expert
+# in the task's field*, not a generalist. Field-standard definitions,
+# conventions, and formulae may be required of the solver without the prompt
+# restating them. A task being hard for current models is desirable, not a
+# defect — difficulty must never be confused with ambiguity or unfairness.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# WHAT THE TASK TESTS
+# -----------------------------------------------------------------------------
+
+[[criteria]]
+name = "code_dependent"
+description = "Requires terminal interaction and code execution, not reasoning alone"
+guidance = """
+Halo targets agentic models, so the problem must require terminal interaction and code execution that goes beyond simple input/output or file manipulation. Any instruction that can be fulfilled through reasoning alone — recall, a single command, or a one-shot generation — is not a fit for the benchmark.
+
+Apply the "Pen & Paper test": the task should NOT be solvable conceptually, without code, in an afternoon. The solution should require genuine multi-step interaction with the environment — exploration, tool use, debugging, computation, and iteration — where the agent must observe intermediate results and adapt. The solution script must not be something a beginner or inexperienced coder could trivially implement; if the code is "too simple," the task will not stump a strong model.
+
+PASS if solving the task genuinely requires writing and running code across multiple dependent steps, and cannot be short-circuited by reasoning, recall, or a single command. FAIL if the task is solvable by a single LLM generation, by reasoning alone, or with trivial code that fails the Pen & Paper test."""
+
+[[criteria]]
+name = "essential_difficulty"
+description = "Genuinely hard for expert reasons — not tedious, not formatting minutiae"
+guidance = """
+The task must require significant professional experience or domain expertise — the kind of problem that would challenge a competent expert in the field, not an average undergraduate working for a few days. Difficulty is judged primarily by how hard the problem is for a skilled human.
+
+The core difficulty must come from genuine reasoning, algorithmic thinking, system design, or domain-specific decision-making — not from tedium, obscure factual recall, arbitrary output precision, or clerical detail. Problems should be multi-step, with cascading and dependent chains of reasoning and implementation where each step builds on prior context, computation, and domain priors. Picking the right tool can itself be a source of difficulty: a strong task can stump a model that does not know how to use a domain-specific library, or that over-relies on a tool where a bespoke workflow is required.
+
+Two failure modes such tasks should target: (1) coding/implementation difficulty — architectural decisions, complex system design, time/resource constraints; and (2) methodological inconsistency — mixing domain assumptions with incompatible methodologies, or combining methods while missing an intermediate step, especially where expert-level decisions (e.g., thresholds chosen from intermediate values) must be made on the fly.
+
+It is acceptable for the task to be solvable by current models, and it is acceptable for it to have been solved before; difficulty should not depend on contrived volume of busywork.
+
+PASS if the difficulty stems from genuine expert reasoning, domain knowledge, or multi-step problem solving that would challenge an experienced professional. FAIL if an average undergraduate could solve it in a few days, or if difficulty comes from tedium, obscure facts, output-formatting minutiae, or sheer volume of non-fundamental work."""
+
+[[criteria]]
+name = "interesting_realistic"
+description = "Represents a realistic problem a professional would be paid to solve"
+guidance = """
+The task must map to a realistic scenario in which solving the problem has real-world value — someone could plausibly be paid to do this, and some (possibly small and niche) group of practitioners would care about the answer. It must not be a gimmick, trick question, or toy puzzle.
+
+The outputs requested must be ones a professional solving the same problem would actually want — not unmeasurable quantities or artifacts irrelevant to the real workflow. The difficulty_explanation should be able to name who, in the real world, would solve this and why.
+
+PASS if the task reflects a realistic professional problem with genuine marginal utility for some real audience, and the requested outputs are relevant to that work. FAIL if the task is a contrived puzzle, a gimmick, or requests outputs no practitioner would care about."""
+
+[[criteria]]
+name = "novel"
+description = "Not solvable through training-corpus memorization"
+guidance = """
+The task must not be a standard textbook exercise or a well-known problem with widely available solutions (FizzBuzz, classic sorting, sudoku solvers, standard course projects) that a model could reproduce from training data. The strongest tasks involve novel combinations of skills, domain-specific scenarios that do not appear verbatim online, or custom code and data that require genuine exploration.
+
+PASS if the task requires reasoning that cannot be short-circuited by memorization. FAIL if it is a standard textbook or well-known problem with widely available solutions."""
+
+[[criteria]]
+name = "solvable"
+description = "A working solution exists and is achievable by an expert in reasonable time"
+guidance = """
+A working solution must be provided (solution/solve.*) that legitimately solves the problem as stated. The problem need not be formally proven possible, but it must be implementable by an expert who knows the idea of the answer in advance within a reasonable effort — at most a few hours of focused work for the implementation itself. It is fine for the *idea* to be hard to discover; the disqualifier is a solution that would take a team weeks of labor to build.
+
+PASS if a working solution is provided that solves the task and could be implemented by an expert in reasonable time. FAIL if no solution is provided (without rigorous justification), the solution does not actually solve the task, or the implementation requires an unreasonable amount of work."""
+
+
+# -----------------------------------------------------------------------------
+# THE INSTRUCTION
+# -----------------------------------------------------------------------------
+
+[[criteria]]
+name = "unambiguous"
+description = "Instructions give the minimum information to solve and pass verification; any sound expert approach passes"
+guidance = """
+The instructions must give the minimum information required to solve the problem and meet the verification requirements. The idea is that any reasonable expert given this problem will pass the verification process as long as their approach is sound and in line with the instructions. If there is some liberty regarding assumptions or implementation details, the constraints for passing must be calibrated accordingly. This could imply setting larger tolerances for numerical values, admitting more than one possible outcome, or disclosing some target (e.g., a convergence threshold) that implicitly constrains the approach.
+
+When assessing this dimension, keep in mind:
+
+- **Disclosure covers everything the agent can see**, not only `instruction.md`: data-file headers, embedded column/field descriptions, schemas, and any README shipped in the working directory (the `assets/`). Inventory what the agent actually receives before judging whether something is disclosed. "Not written in the prompt" is not the same as "ambiguous" — what must be disclosed is anything non-standard, dataset- or instrument-specific, arbitrary (output schema, tolerances, rounding), or a choice among several equally-standard conventions.
+- **To claim a task is ambiguous, exhibit a specific sound expert approach that fails verification** (see "What counts as a sound approach" below). Pointing at agent failures is not sufficient; where feasible, identify the approach the failing runs took and judge whether it was sound.
+- **Check tolerance calibration on both sides.** For each numeric tolerance, compare it against (a) the spread of outputs from the sound-method variants you can identify — the band should admit all of them — and (b) outputs from plausible wrong approaches — the band should reject them. A band that excludes a sound method is an ambiguity/calibration defect; a band that admits a wrong method is a verifiability defect.
+
+What counts as a "sound approach": an alternative approach counts against the task only if it is (1) internally consistent — a single coherent method, not a hybrid of incompatible estimators; (2) consistent with any method or model the prompt names explicitly; and (3) one a competent practitioner would actually choose. Producing a different number is not enough — distinguish a *sound alternative* from an *error* and from an *inconsistent hybrid*. If every variant that fails verification is unsound by this standard, the task is not ambiguous on that account.
+
+The complement of ambiguity is also a defect: underspecification, where success criteria are so loose that multiple valid solution paths diverge, or where the verifiers grade on criteria the instruction never established (explicitly or implicitly). All system-design decisions and precision thresholds must make sense within the problem and domain, and there must be a clear, valid justification — based on the instructions alone — for why other methods that produce incorrect or insufficiently precise answers are NOT valid here. The required level of precision should implicitly necessitate which methods are acceptable, so that choosing an incorrect method results in violated tolerances.
+
+PASS if the instruction (plus everything in `assets/`) discloses enough that every sound expert approach passes verification, all non-standard/arbitrary choices are disclosed, and tolerances are calibrated to admit sound variants while rejecting unsound ones. FAIL if a specific sound expert approach would fail verification, if an arbitrary or non-standard choice the agent must match is undisclosed, or if the criteria are so loose that unsound approaches pass."""
+
+[[criteria]]
+name = "outcome_verified"
+description = "Grades the end state, not the process; describes what to achieve, not how"
+guidance = """
+The task must be graded on the final solution, not the approach taken. Instructions should state the goal upfront and give the agent latitude in how to deliver it — they must not enumerate a step-by-step procedure or mandate specific tools, libraries, or methods (e.g., "use emacs," "use scipy.optimize"). The instruction should specify *what* to accomplish, not *how* to accomplish it.
+
+The exception is constraints that are mechanistic and exist to prevent cheating, or a specified output format. Output-format requirements are allowed and, where the format is arbitrary, required to be disclosed — but they should be straightforward and must not become the source of difficulty.
+
+This is the antidote to overspecificity: when instructions walk through the workflow step by step, the agent will likely solve the problem and the task will not be hard enough.
+
+PASS if the verifiers grade the end result and the instruction describes the objective rather than a procedure or mandated tools. FAIL if tests enforce a specific approach/tool, or the instruction is overspecified with step-by-step procedure that hands the agent the method."""
+
+[[criteria]]
+name = "instruction_concision"
+description = "Human-written, concise, absolute paths, no fluff, no solution hints, no tool listings"
+guidance = """
+Instructions must be human-written, concise, and clear, and should read as written by a domain expert rather than generated by an LLM (LLM-generated prose is a red flag). They must reference inputs and outputs by absolute path (e.g., `/app/data.csv`, not `data.csv`) and use backticks for paths, commands, and code; use `$...$` / `$$...$$` for math.
+
+Do not hint at the solution approach or provide step-by-step procedures. Do not include unnecessary headings, preamble, roleplay scenarios, or fluff. Do not list available tools, libraries, or environment details that are not direct inputs required to solve the task — the agent should discover what is available; mentioning a tool is only warranted if the task is specifically testing use of that tool. Do not spell out prerequisite knowledge that is unambiguous and unanimously agreed upon by experts in the field; over-explaining hand-holds the agent.
+
+PASS if the instruction is concise, human-written, uses absolute paths and proper formatting, and states only what is needed. FAIL if it uses relative paths, hints at the approach, gives a step-by-step procedure, appears LLM-generated, includes headings/preamble/roleplay/fluff, or lists tools/libraries the agent should discover on its own."""
+
+[[criteria]]
+name = "structured_data_schema"
+description = "If structured output is expected, the exact schema is documented as normative"
+guidance = """
+If the task expects structured output (JSON, CSV, an API response, a database schema, a config file), the exact schema must be documented in `instruction.md` or a clearly referenced spec file shipped in `assets/`, and marked as normative. Examples alone are not sufficient unless explicitly stated to be the normative specification. This prevents agents from failing on ambiguous format expectations rather than on the core problem.
+
+PASS if any structured output has its exact schema explicitly and normatively documented. FAIL if structured output is expected but only examples are given. N/A if no structured output is expected."""
+
+
+# -----------------------------------------------------------------------------
+# THE VERIFIERS
+# -----------------------------------------------------------------------------
+
+[[criteria]]
+name = "verifiable"
+description = "Verification is reliable, deterministic, on the requested output files, and cannot be bypassed"
+guidance = """
+All verifications must be conducted on the output files that were explicitly requested from the agent in `instruction.md`. If there are specific formatting requirements, these must be conveyed through the instruction so the assessment is fair. The verification must be reliable and deterministic — re-running it repeatedly must yield the same result — and must ensure the request is fulfilled as intended, without cheating: no agent should be able to bypass the resolution mechanism by finding the solution online, applying an analytical shortcut the task means to exclude, or manufacturing the intended response.
+
+Confirm the mechanics, not just the grading logic: the output paths named in the instruction must match the paths the verifier reads. (Runtime delivery of those files to a verifier container is a Harbor-conversion concern handled in a later step and is out of scope here — but the names and paths must already be internally consistent between `instruction.md` and `tests/`.)
+
+LLM-as-a-judge grading is acceptable only in rare, documented circumstances where it can be shown the judge essentially never errs; the submission must document why programmatic verification is insufficient.
+
+PASS if verification is deterministic, reliable, runs against the explicitly requested output files, resists online/analytical/manufactured-answer bypasses, and the output paths in `instruction.md` match those the verifier reads. FAIL if grading is subjective or nondeterministic, reads files other than those requested, can be trivially bypassed, or uses LLM-as-a-judge without rigorous justification."""
+
+[[criteria]]
+name = "functional_verification"
+description = "Tests verify behavior through execution, not source-code string matching"
+guidance = """
+Tests must verify actual behavior by executing code and checking outputs, not by scanning source files for keywords, imports, function names, or regex patterns. String matching is brittle and gameable — an agent can insert a keyword without implementing the functionality.
+
+PASS if tests verify behavior through execution, API calls, or output checking. FAIL if tests rely primarily on string matching, keyword scanning, or source-code pattern detection."""
+
+[[criteria]]
+name = "deterministic_reproducible"
+description = "Consistent results across runs; dependencies pinned; no mutable live-service dependence"
+guidance = """
+The task must produce consistent results across runs. It must not depend on live services whose content is mutable and task-relevant; stable infrastructure (PyPI, conda-forge, apt, etc.) is fine, and pinnable dependencies should be pinned where the ecosystem supports it. For stochastic tasks, the verification strategy must be robust across many trials — an oracle that intermittently fails its own verifier is not acceptable.
+
+PASS if dependencies are pinned where possible, no mutable live services are required, and results are consistent across runs. FAIL if pinnable dependencies are unpinned, the task relies on mutable live services, or results vary between runs."""
+
+[[criteria]]
+name = "test_instruction_alignment"
+description = "Tests are atomic, documented, and check exactly the requirements stated in the instruction — no more, no less"
+guidance = """
+Every test assertion must trace back to a requirement stated (explicitly or implicitly) in `instruction.md`, and every requirement in the instruction must have corresponding test coverage. Tests must not introduce requirements beyond what the instruction describes — grading on unstated criteria is an unfair stump, because the verifiers no longer grade 1:1 against the instruction.
+
+The verifier script (`tests/test_outputs.py`) must be atomic and deterministic. Each explicit requirement in the instruction should be tested in its own function, and each function must carry a docstring (or comment) stating what it conceptually checks in the context of the instruction. Tests should be hand-written, readable, and concise; sprawling test suites usually signal over-specification. Any filename the agent must produce must be named explicitly in the instruction.
+
+Existence and formatting checks should rarely fail for a competent solver, because formatting must be clearly specified up front — if such checks are the ones failing, that is a red flag pointing back at the instruction.
+
+PASS if every assertion traces to an instruction requirement and every requirement is tested, tests are atomic with per-requirement functions and docstrings, and no test grades on unstated criteria. FAIL if tests check requirements the instruction never establishes, omit coverage of stated requirements, lack docstrings, or bundle unrelated checks into non-atomic functions."""
+
+[[criteria]]
+name = "anti_cheat"
+description = "The answer is not leaked to the agent, and tests resist common adversarial shortcuts"
+guidance = """
+The agent has full access to `instruction.md` and everything shipped in `assets/`, and runs with broad privileges. The intended answer (or ground-truth/oracle data, or the solution itself) must NOT be embedded anywhere the agent can read — not in `assets/`, not in instruction text, not in committed fixtures the agent receives. Anything that must remain hidden from the agent (oracle blobs, expected outputs) must live with the verifier, not in the agent-visible inputs.
+
+Tests must resist shortcuts agents commonly attempt: fabricating tool wrappers, monkey-patching libraries, caching or hardcoding precomputed answers, modifying the test framework, or reading files that contain the solution. If the task ships a git repository in `assets/`, ensure later commits do not reveal the answer.
+
+PASS if no answer/oracle/solution data is reachable in agent-visible inputs and the tests resist common adversarial shortcuts. FAIL if the answer is embedded in `assets/` or the instruction, oracle data is agent-readable, or the verification can be trivially bypassed."""
+
+
+# -----------------------------------------------------------------------------
+# THE SOLUTION
+# -----------------------------------------------------------------------------
+
+[[criteria]]
+name = "solution_quality"
+description = "Solution derives the answer through real computation, commented and traceable to the explanation; no hardcoded results"
+guidance = """
+The solution must demonstrate the actual computation an agent would have to perform — the sequence of commands or code that derives the answer — rather than echoing or printing a precomputed final result. Writing source files or scripts (via heredoc, editor, etc.) that are then executed is fine; the disqualifier is directly emitting the final answer without performing the work, which fails to demonstrate the task is legitimately solvable. The script must not contain hardcoded values or results that are not clearly derived from the inputs disclosed in `instruction.md`.
+
+Each function in the solution should carry comments linking it to the corresponding step in `solution_explanation`, so a reviewer can follow the solution as the realization of the documented approach. Large files (more than ~20 lines) should be their own files in `solution/` rather than inlined as giant heredocs.
+
+PASS if the solution derives the answer through genuine computation, contains no unexplained hardcoded results, and its functions are commented and traceable to `solution_explanation`. FAIL if it bare-prints/writes the final answer without computation, hardcodes values not derived from the disclosed inputs, or lacks comments linking the code to the explanation."""
+
+[[criteria]]
+name = "task_security"
+description = "No malicious code in any submitted file"
+guidance = """
+All submitted files — `instruction.md`, `solution/solve.*`, `tests/test_outputs.py`, `task.toml`, and anything in `assets/` — must be free of malicious behavior, since reviewers and the pipeline may execute them. Reject submissions containing: credential/secret exfiltration; network exfiltration to endpoints not justified by the task; supply-chain attacks (executing untrusted remote scripts, trojanized dependencies); host-escape attempts; destructive operations (rm -rf of system paths, fork bombs, disk fills); obfuscated payloads (base64/hex-encoded commands, eval of constructed strings, deceptive Unicode) unless the encoding is a documented part of the task domain; prompt injection aimed at the agent; or mechanisms intended to interfere with other tasks or the pipeline.
+
+PASS if every submitted file contains only legitimate code directly related to the task's stated purpose. FAIL if any file contains malicious code, exfiltration, obfuscated payloads, prompt injection, or destructive/interfering behavior."""
+
+
+# -----------------------------------------------------------------------------
+# METADATA & DOCUMENTATION (task.toml)
+# -----------------------------------------------------------------------------
+
+[[criteria]]
+name = "difficulty_explanation_quality"
+description = "difficulty_explanation conveys the core challenge, the expertise required, the data provenance, and the real-world relevance"
+guidance = """
+The `difficulty_explanation` field must let a non-domain expert understand what makes this task fundamentally hard — for both humans and agents — and why it is hard rather than merely tedious. It should name the expertise required, identify the conceptual or methodological traps that could stump a non-expert or a model, state the source of any provided data (synthetic or from a real experiment, and whether it is realistic and realistically challenging), and explain who in the real world would need to solve this and why.
+
+It must describe the intrinsic difficulty of the problem, not experimental results — do not cite pass rates, benchmark scores, or how particular models performed (these change; the difficulty does not). Frame it around the task itself ("requires deep knowledge of X"), not around the agent. The template default is an empty string; if unchanged, it is incomplete.
+
+PASS if the explanation clearly conveys the core difficulty for both audiences, the required expertise and traps, the data provenance, and the real-world relevance. FAIL if it is empty, vague, circular, results-based, or omits data provenance or real-world relevance."""
+
+[[criteria]]
+name = "solution_explanation_quality"
+description = "solution_explanation lets another expert reimplement the solution from priors through to the answer"
+guidance = """
+The `solution_explanation` field must describe the high-level strategy and key insights such that, read top to bottom, another domain expert could implement the solution from the priors induced by `instruction.md` alone. It should include each step starting from those priors: the domain-specific assumptions, the decisions on choosing methodology and why, and what each computation/transformation/fix accomplishes. It is not a line-by-line walkthrough of the code, but it must bridge the instruction (what) to the solution (how).
+
+It must be congruent with the actual solution files — an explanation describing a different approach than `solve.*` implements is a defect. The template default is an empty string. If no solution is provided, this field must rigorously justify why (the only acceptable reason being that implementation would take a team weeks or longer), describing what the solution would involve.
+
+PASS if the explanation conveys the approach and key insights well enough for another expert to reimplement it, and is consistent with the solution files (or rigorously justifies an absent solution). FAIL if it is empty, vague, contradicts the solution files, or omits a solution without strong justification."""
+
+[[criteria]]
+name = "verification_explanation_quality"
+description = "verification_explanation describes what the tests check and justifies all tolerances against the instruction"
+guidance = """
+The `verification_explanation` field must explain how the verifiers validate the task as defined in `instruction.md`: what each test checks, how it checks it, and why that strategy is sufficient — keeping in mind the verification cannot test anything outside the files requested as output in the instruction. It must be congruent with the actual test files.
+
+If the verifier uses numeric ranges, tolerances, similarity thresholds, percentile bounds, fuzzy comparisons, or any other inequality-based check rather than exact matching, the explanation must justify how those bounds were calibrated: what value the range brackets, what sources of legitimate variation it accounts for (floating-point precision, alternative valid algorithms, different quadrature schemes, model nondeterminism, acceptable rounding), and whether the band has been validated against alternative correct methods — not only the reference solution. A band only the reference implementation can hit is too tight; a band so wide that obviously wrong answers pass is too loose. Bare statements like "accepted range [29, 31]" with no rationale are insufficient.
+
+PASS if the explanation concisely and accurately describes what the tests verify, is consistent with the test files, and justifies the calibration of every tolerance against the instruction. FAIL if it is empty, vague, contradicts the tests, fails to explain what they verify, or uses inequality-based checks without justifying the bounds."""
+
+[[criteria]]
+name = "category_and_tags"
+description = "category and tags are meaningful and specific to the task"
+guidance = """
+`category` must accurately reflect the task's primary domain (e.g., "software_engineering", "cybersecurity", "data_science"). `tags` must be specific, relevant keywords describing the skills, tools, or domains involved (good: ["debugging", "python", "memory-leak"]; bad: ["hard", "coding", "task"]). The template defaults are `category = ""` and `tags = []`; if unchanged, they were not set.
+
+PASS if the category reflects the domain and tags are specific and relevant. FAIL if the category is wrong/empty, or tags are generic, irrelevant, or left at default."""
+
+[[criteria]]
+name = "expert_time_estimate"
+description = "expert_time_estimate_hours is provided, non-zero, and plausible"
+guidance = """
+`expert_time_estimate_hours` must reflect how long a focused domain expert with all prerequisite knowledge, working straight through, would take to solve the task — a best-case human estimate, not an average. It must be consistent with the difficulty_explanation: a task described as requiring deep expertise but estimated at 0.5 hours is suspicious, as is a trivial task estimated at 40 hours. The template default is 0.
+
+PASS if the estimate is non-zero and plausible given the described difficulty. FAIL if it is 0 (default), missing, or clearly inconsistent with the task's complexity."""
+
+[[criteria]]
+name = "open_internet"
+description = "Task is designed to run with open internet access"
+guidance = """
+Halo tasks are expected to run with open internet access. Confirm the task does not assume an offline environment in a way that conflicts with this, and that being open-internet does not itself open a cheating path (i.e., the answer must not be retrievable online — see anti_cheat and verifiable). If the submission documents an internet setting, it should be open.
+
+PASS if the task is compatible with open-internet execution and open internet does not enable trivially looking up the answer. FAIL if the task requires an offline environment, or if open internet would let the agent retrieve the intended answer and bypass the work."""
+
+
+# -----------------------------------------------------------------------------
+# REVIEWABILITY & HYGIENE
+# -----------------------------------------------------------------------------
+
+[[criteria]]
+name = "reviewable"
+description = "A non-specialist reviewer can verify correctness, or sufficient explanation is provided"
+guidance = """
+A non-specialist reviewer should be able to confirm that the instruction, tests, solution, and assets are mutually consistent and make sense. Where the task requires specialized domain knowledge, the explanations (difficulty/solution/verification) must supply enough context for a reviewer to evaluate correctness. Expected answers should be derived in the solution script rather than hardcoded, so the derivation can be followed without domain expertise; hardcoded expected values without derivation are a red flag.
+
+PASS if a non-specialist can verify correctness from the files and explanations, with expected values derived rather than hardcoded. FAIL if the task needs domain expertise to review and no sufficient explanation is given, or expected values are hardcoded without derivation."""
+
+[[criteria]]
+name = "typos"
+description = "No typos in filenames, paths, commands, or variable names"
+guidance = """
+Look closely for typos in critical identifiers — filenames, paths, commands, variable names — across `instruction.md`, the tests, the solution, and `assets/`. Typos here cause silent failures or send the agent after the wrong problem.
+
+PASS if no typos are found in critical identifiers. FAIL if typos appear in filenames, paths, commands, or variable names."""
+
+[[criteria]]
+name = "no_extraneous_files"
+description = "The submission contains only files needed to define, solve, or verify the task"
+guidance = """
+The submission should contain only what is required: `task.toml`, `instruction.md`, the solution under `solution/`, the verifiers under `tests/`, and the inputs under `assets/` that the task actually references or needs at runtime. A file is necessary only if something references or requires it. Editor/OS cruft, scratch or debug leftovers, backup or duplicate copies, and unreferenced data/assets do not belong.
+
+PASS if every file in the submission is required to define, solve, or verify the task. FAIL if the submission contains cruft, scratch/debug leftovers, backups, or unreferenced assets."""
