@@ -39,8 +39,11 @@ review.
   `assets/`, data-file headers) as disclosure.
 - Assess every dimension against a **competent domain expert** in the task's field, not a
   generalist.
-- Harbor-runtime concerns the rubric omits (Dockerfile/image hygiene, separate-verifier plumbing,
-  resource/timeout config) are **out of scope**.
+- Tasks are in Harbor format, so the rubric's Harbor-format/packaging criteria
+  (`separate_verifier_configured`, `environment_hygiene`, `resource_configuration`, `task_name`,
+  `task_readme`, `task_toml_schema`) **are in scope** — grade them **read-only** from `task.toml`
+  and the two Dockerfiles (`environment/Dockerfile`, `tests/Dockerfile`); do not execute anything.
+  If a submission is genuinely non-Harbor (no `environment/` or `tests/Dockerfile`), mark those N/A.
 - Ignore any `harbor-merged-*/` run-output directories and `jobs/`, `oracle-logs/`, `pass8-logs/`
   if present — grade only the task definition.
 

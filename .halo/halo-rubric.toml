@@ -37,13 +37,14 @@
 # under environment/, files COPYed into the image, data-file headers) as
 # disclosure.
 #
-# THE GRADING CRITERIA ARE IDENTICAL FOR BOTH FORMATS. This rubric grades the
-# task's design — its difficulty, clarity, solvability, and verification — not
-# its packaging. Do not pass or fail a task on whether it is in Harbor format,
-# and do not add or drop criteria based on format. The Harbor-runtime concerns
-# that this rubric deliberately omits (Dockerfile/image hygiene, separate-verifier
-# plumbing, resource/timeout config) remain out of scope even when a Dockerfile is
-# present — they are validated during/after Harbor conversion, not here.
+# Tasks are now submitted in HARBOR FORMAT, so this rubric ALSO grades the
+# Harbor-format/packaging criteria — read-only, from task.toml + the two
+# Dockerfiles; nothing is executed: separate_verifier_configured,
+# environment_hygiene, resource_configuration, task_name, task_readme, and
+# task_toml_schema. The core design criteria (difficulty, clarity, solvability,
+# verification) are graded the same regardless of format. If a submission is
+# genuinely NOT in Harbor format (no environment/ or tests/Dockerfile), mark the
+# Harbor-only criteria N/A rather than failing them.
 #
 # HARBOR RUN OUTPUTS ARE OUT OF SCOPE. A task directory may contain one or more
 # `harbor-merged-<RUN_ID>/` directories (recorded agent rollouts plus verifier
@@ -339,3 +340,65 @@ guidance = """
 The submission should contain only what is required: `task.toml`, `instruction.md`, the solution under `solution/`, the verifiers under `tests/`, and the inputs under `assets/` that the task actually references or needs at runtime. A file is necessary only if something references or requires it. Editor/OS cruft, scratch or debug leftovers, backup or duplicate copies, and unreferenced data/assets do not belong.
 
 PASS if every file in the submission is required to define, solve, or verify the task. FAIL if the submission contains cruft, scratch/debug leftovers, backups, or unreferenced assets."""
+
+# =============================================================================
+# Harbor-format / packaging criteria (graded now that tasks are in Harbor format)
+# All assessed READ-ONLY from task.toml + the Dockerfiles. Mark N/A if the
+# submission is genuinely non-Harbor (no environment/ or tests/Dockerfile).
+# =============================================================================
+
+[[criteria]]
+name = "separate_verifier_configured"
+description = "The task is correctly configured for separate-verifier mode and the verifier's inputs are sufficient"
+guidance = """
+In Harbor separate-verifier mode the verifier runs in its own container after the agent's container is torn down, so it can only read: files listed in top-level `artifacts = [...]`, anything baked into the verifier image by `tests/Dockerfile`, or a persistent sidecar. Grade both the mechanical wiring and the judgment:
+
+- `task.toml` declares `[verifier] environment_mode = "separate"`; `artifacts` is at the TOP level of `task.toml` (not nested under `[verifier]`); `tests/Dockerfile` exists, COPYs the tests into `/tests`, and pre-creates the parent dir of every declared artifact (`RUN mkdir -p ...`).
+- Every path the tests read from the agent is declared in `artifacts`, baked into the verifier image, or on a sidecar — not an undeclared `/app`, `/root`, `/var`, etc. path.
+- Runtime tooling the verifier needs is pre-installed in `tests/Dockerfile`, not installed at verify time in `test.sh` (`apt-get`/`curl | sh`/`pip install`).
+
+PASS if separate mode is fully wired, the verifier's inputs are all declared/baked/sidecar, and its tooling is pre-installed. FAIL if any wiring condition is missing, the tests read undeclared agent paths, or the verifier installs its tooling at verify time. N/A if the submission is genuinely non-Harbor (no `environment/` or `tests/Dockerfile`)."""
+
+[[criteria]]
+name = "environment_hygiene"
+description = "Agent image is clean (no tests/solution or test-only deps); verifier image owns its deps; apt managed properly"
+guidance = """
+Read `environment/Dockerfile` (agent image) and `tests/Dockerfile` (verifier image):
+
+- The agent image must NOT COPY `solution/` or `tests/` in, and must not bake in test-only or solution-only dependencies. It should set up only what the task's start state requires — figuring out task dependencies is legitimate agent work.
+- The verifier image owns `/tests/*` and all test-only deps (pytest, plugins, scoring/oracle tooling, ground-truth data) rather than installing them at verify time.
+- In both Dockerfiles, apt packages are not version-pinned, `apt-get install` is preceded by `apt-get update`, and followed by `rm -rf /var/lib/apt/lists/*`.
+
+PASS if the agent image is clean, the verifier image owns its test-only deps, and apt is managed properly in both. FAIL if tests/solution or test-only deps leak into the agent image, the verifier installs test-only deps at verify time instead of baking them, or apt is mismanaged. N/A if the submission is genuinely non-Harbor (no Dockerfiles)."""
+
+[[criteria]]
+name = "resource_configuration"
+description = "Timeouts and resource limits in task.toml are appropriate, and difficulty comes from reasoning, not compute"
+guidance = """
+Review `[verifier]`, `[agent]`, and `[environment]` in `task.toml` (template defaults: verifier/agent `timeout_sec = 120`, `build_timeout_sec = 600`, `cpus = 1`, `memory_mb = 2048`, `storage_mb = 10240`, `gpus = 0`). The verifier timeout should fit the test suite; the agent timeout should reflect the task's difficulty; cpus/memory/storage/gpus should match the task's real needs. Tasks should be hard for the agent, not for the computer — difficulty must come from reasoning and problem-solving, not from trivially cranking up compute.
+
+PASS if timeouts and resources are appropriate for the task and difficulty is intellectual, not computational. FAIL if timeouts are clearly too short/long, resources are excessive without justification, or difficulty stems mainly from computational intensity. N/A if the submission is genuinely non-Harbor (no resource config)."""
+
+[[criteria]]
+name = "task_name"
+description = "The task name/slug is descriptive, specific, kebab-case, and at most 3 words"
+guidance = """
+The task's identifier (`[task].name` in `task.toml`, and/or the task directory name) should tell a reader what the task is about without opening files. Use lowercase kebab-case, at most 3 hyphen-separated tokens, specific enough to distinguish it from other tasks. Good: `optimize-postgres-query`, `debug-memory-leak`. Bad: generic (`task-1`, `challenge`), vague (`python-stuff`), misleading, or longer than 3 words.
+
+PASS if the name is descriptive, specific, kebab-case, and ≤3 words. FAIL if it is generic, vague, misleading, not kebab-case, or longer than 3 words."""
+
+[[criteria]]
+name = "task_readme"
+description = "If a development README is present, it provides useful reviewer context and doesn't duplicate task content"
+guidance = """
+A task may optionally include a `README.md` with development context for reviewers/maintainers (not passed to the agent): design-decision notes, links to extra verifier tests or tracing tools, references to related work. It should not duplicate `instruction.md`, the solution, or `task.toml` metadata, and must not be misleading.
+
+PASS if the README adds useful context not found elsewhere, or if no README is present (it is optional). FAIL if the README duplicates task content or is misleading. N/A if no README is present."""
+
+[[criteria]]
+name = "task_toml_schema"
+description = "task.toml contains only valid Harbor fields — no invented or extraneous fields"
+guidance = """
+`task.toml` must contain only fields Harbor recognizes; extra fields are silently ignored and create false impressions. Expected sections/fields: `[metadata]` (author_name, author_email, author_organization, difficulty_explanation, solution_explanation, verification_explanation, category, tags, expert_time_estimate_hours, relevant_experience, referral); `[verifier]` (timeout_sec, env, user, environment_mode, environment); `[agent]` (timeout_sec, user); `[environment]` (build_timeout_sec, docker_image, cpus, memory_mb, storage_mb, gpus, gpu_types, allow_internet, env, skills_dir, mcp_servers, healthcheck); `[solution]` (env); root (schema_version, task, metadata, verifier, agent, environment, solution, source, artifacts). Invented fields (e.g. "skills", "prerequisites", "estimated_difficulty", "notes") do not belong.
+
+PASS if `task.toml` contains only valid fields in all sections. FAIL if any invented or extraneous fields are present."""
