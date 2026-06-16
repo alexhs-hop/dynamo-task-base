@@ -28,10 +28,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout PR head (untrusted) read-only into submission/
+        # Check out the PR's head commit via the base repo's pull ref
+        # (refs/pull/<N>/head). This works for PRs from PRIVATE forks — the
+        # base GITHUB_TOKEN can't read a contributor's private fork directly,
+        # but it can read this ref, which mirrors the PR head into the base repo.
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
           path: submission
           persist-credentials: false
 
