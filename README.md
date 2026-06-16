@@ -1,13 +1,9 @@
 # Dynamo Task Submission
 
-Implement a Terminal-Bench-style task in this repository (Harbor task format). When
+Implement a [Terminal-Bench-style](https://www.tbench.ai/benchmarks/terminal-bench-2) task in this repository (Harbor task format). When
 you open a pull request, an automated reviewer scores your task against the Dynamo
 rubric and posts a **PASS / FAIL verdict** as a PR comment. **All criteria must
 pass** to be accepted — iterate until the verdict is ✅ PASS.
-
-- The review **runs on the project's API key — you do not need one.**
-- The review is **read-only**: it reads your files and grades them; it never runs
-  your solution or tests.
 
 ## How to submit (fork → PR)
 
@@ -42,6 +38,12 @@ This repo was scaffolded with `harbor tasks init`. Fill in:
 
 Keep the `harbor-canary` comment in each file (anti-contamination), pin dependency
 versions, and reference every expected output file in `instruction.md`.
+
+Please ensure your task is self-consistent. Run the harbor oracle before submitting to ensure everything builds and your verifiers return 1.
+```bash
+uv tool install harbor
+harbor run -p path-to/your-task -a oracle
+```
 
 > The exact criteria the reviewer uses are in
 > [`.dynamo/dynamo-rubric.toml`](.dynamo/dynamo-rubric.toml) — read it to see what "good" means.
