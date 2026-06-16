@@ -38,6 +38,13 @@ jobs:
       - name: Strip infra files from the submission (so only the task is reviewed; we never run them)
         run: rm -rf submission/.github submission/.halo submission/README.md
 
+      - name: Static checks (free, deterministic — gate before the paid review)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: bash .halo/static-report.sh submission
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -47,6 +54,7 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code >/dev/null 2>&1
 
       - name: Run read-only review (project key)
+        id: review
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -63,7 +71,7 @@ jobs:
             | tee "$RUNNER_TEMP/verdict.md"
 
       - name: Report + gate
-        if: always()
+        if: always() && steps.review.outcome != 'skipped'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
