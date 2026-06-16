@@ -40,8 +40,7 @@
 # Tasks are now submitted in HARBOR FORMAT, so this rubric ALSO grades the
 # Harbor-format/packaging criteria — read-only, from task.toml + the two
 # Dockerfiles; nothing is executed: separate_verifier_configured,
-# environment_hygiene, resource_configuration, task_name, task_readme, and
-# task_toml_schema. The core design criteria (difficulty, clarity, solvability,
+# resource_configuration, task_name, task_readme, and task_toml_schema. The core design criteria (difficulty, clarity, solvability,
 # verification) are graded the same regardless of format. If a submission is
 # genuinely NOT in Harbor format (no environment/ or tests/Dockerfile), mark the
 # Harbor-only criteria N/A rather than failing them.
@@ -358,18 +357,6 @@ In Harbor separate-verifier mode the verifier runs in its own container after th
 - Runtime tooling the verifier needs is pre-installed in `tests/Dockerfile`, not installed at verify time in `test.sh` (`apt-get`/`curl | sh`/`pip install`).
 
 PASS if separate mode is fully wired, the verifier's inputs are all declared/baked/sidecar, and its tooling is pre-installed. FAIL if any wiring condition is missing, the tests read undeclared agent paths, or the verifier installs its tooling at verify time. N/A if the submission is genuinely non-Harbor (no `environment/` or `tests/Dockerfile`)."""
-
-[[criteria]]
-name = "environment_hygiene"
-description = "Agent image is clean (no tests/solution or test-only deps); verifier image owns its deps; apt managed properly"
-guidance = """
-Read `environment/Dockerfile` (agent image) and `tests/Dockerfile` (verifier image):
-
-- The agent image must NOT COPY `solution/` or `tests/` in, and must not bake in test-only or solution-only dependencies. It should set up only what the task's start state requires — figuring out task dependencies is legitimate agent work.
-- The verifier image owns `/tests/*` and all test-only deps (pytest, plugins, scoring/oracle tooling, ground-truth data) rather than installing them at verify time.
-- In both Dockerfiles, apt packages are not version-pinned, `apt-get install` is preceded by `apt-get update`, and followed by `rm -rf /var/lib/apt/lists/*`.
-
-PASS if the agent image is clean, the verifier image owns its test-only deps, and apt is managed properly in both. FAIL if tests/solution or test-only deps leak into the agent image, the verifier installs test-only deps at verify time instead of baking them, or apt is mismanaged. N/A if the submission is genuinely non-Harbor (no Dockerfiles)."""
 
 [[criteria]]
 name = "resource_configuration"

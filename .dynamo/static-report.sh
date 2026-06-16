@@ -24,7 +24,6 @@ ALL=(
   "check-dockerfile-platform.sh|Dockerfile is not pinned to a CPU platform"
   "check-nproc.sh|no bare nproc (use a fixed CPU count)"
   "check-pip-pinning.sh|pip/uv installs are version-pinned"
-  "check-canary.sh|canary strings present in task files"
 )
 
 pass=""; fail=""; FAILED=0

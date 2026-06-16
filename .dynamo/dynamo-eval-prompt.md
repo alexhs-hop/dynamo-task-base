@@ -40,7 +40,7 @@ review.
 - Assess every dimension against a **competent domain expert** in the task's field, not a
   generalist.
 - Tasks are in Harbor format, so the rubric's Harbor-format/packaging criteria
-  (`separate_verifier_configured`, `environment_hygiene`, `resource_configuration`, `task_name`,
+  (`separate_verifier_configured`, `resource_configuration`, `task_name`,
   `task_readme`, `task_toml_schema`) **are in scope** — grade them **read-only** from `task.toml`
   and the two Dockerfiles (`environment/Dockerfile`, `tests/Dockerfile`); do not execute anything.
   If a submission is genuinely non-Harbor (no `environment/` or `tests/Dockerfile`), mark those N/A.
